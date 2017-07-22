@@ -1,0 +1,88 @@
+{ "namespace" : "avro.distributed.proto",
+  "protocol" : "ServerProto",
+
+  "types": [
+      { "type": "enum",
+         "name": "ClientType",
+         "symbols" : ["USER", "FRIDGE", "LIGHT", "SENSOR"]
+      },
+      { "type": "record",
+         "name": "light_status",
+         "fields": [
+              {"name": "light_name", "type": "string"},
+              {"name": "online_status", "type": "boolean"},
+              {"name": "state", "type": "boolean"}
+         ]
+     },
+
+    { "type": "record",
+      "name": "FridgeDetails",
+      "fields": [
+        {"name": "ip", "type": "string"},
+        {"name": "port", "type": "int"}
+      ]},
+    { "type": "record",
+      "name": "ClientDetails",
+      "fields": [
+        {"name": "name", "type": "string"},
+        {"name": "type", "type": "ClientType"},
+        {"name": "status", "type": "boolean"}
+      ]
+
+    }
+   ],
+  "messages": {
+		"connect": {
+			"request": [{"name": "username", "type": "string" },
+						{"name": "IPaddres", "type": "string"},
+						{"name": "portNumber","type": "int"},
+						{"name": "userType", "type": "ClientType"}],
+			"response": "string"
+		},
+
+
+    "getUsers": {
+        "request": [],
+        "response": {"type": "array", "items": "ClientDetails"}
+    },
+
+    "switchLights": {
+        "request": [{ "name": "lightname", "type": "string" }],
+        "response": "boolean"
+    },
+
+    "getLightsStatus": {
+        "request": [],
+        "response": {"type": "array","items": "light_status"}
+    },
+
+    "getFridgeInventory": {
+      "request": [{"name": "fridgename", "type": "string"}],
+      "response": {"type": "array", "items": "string"}
+    },
+
+    "openFridge":{
+      "request": [{"name": "fridgename", "type": "string"}],
+      "response": "FridgeDetails"
+    },
+
+    "set_fridge_inventory":{
+      "one-way": true,
+      "request": [
+        {"name": "fridge", "type": "string"},
+        {"name": "inventory","type": {"type": "array", "items": "string"}}
+      ]
+    },
+
+    "temperatureUpdate":{
+      "one-way": true,
+      "request": [{"name": "sensor_name", "type": "string"},{"name": "temperature", "type": "float"}]
+    },
+
+    "getTemperatureList":{
+
+      "request": [{"name": "sensor_name", "type": "string"}],
+      "response": {"type": "array", "items": "float"}
+    }
+  }
+}

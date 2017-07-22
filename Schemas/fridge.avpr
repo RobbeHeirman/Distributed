@@ -1,0 +1,26 @@
+{
+  "namespace": "avro.distributed.proto",
+  "protocol": "FridgeProto",
+
+  "messages": {
+    "addItem": {
+      "one-way": true,
+      "request": [{"name": "item", "type": "string"}]
+    },
+    "contains": {
+      "request": [],
+      "response": {
+        "type": "array",
+        "items": "string"
+      }
+    },
+    "removeItem": {
+      "one-way": true,
+      "request": [{"name": "item", "type": "string"}]
+    },
+    "close_fridge": {
+      "one-way": true,
+      "request": []
+    }
+  }
+}

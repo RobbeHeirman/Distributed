@@ -1,0 +1,4 @@
+{
+  "namespace": "avro.distributed.proto",
+  "protocol": "SensorProto"
+}

@@ -1,0 +1,11 @@
+{
+  "namespace": "avro.distributed.proto",
+  "protocol": "UserProto",
+
+  "messages": {
+    "is_alive": {
+      "request": [],
+      "response": "null"
+    }
+  }
+}

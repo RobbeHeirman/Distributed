@@ -1,0 +1,11 @@
+{ "namespace" : "avro.distributed.proto",
+  "protocol" : "LightProto",
+
+  "messages" : {
+
+    "set_light": {
+      "one-way" : true,
+      "request" : [{"name": "light_state", "type": "boolean"}]
+    }
+  }
+}
