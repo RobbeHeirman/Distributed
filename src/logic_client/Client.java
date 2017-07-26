@@ -2,6 +2,7 @@ package logic_client;
 
 import avro.distributed.proto.ClientType;
 import avro.distributed.proto.ServerProto;
+import org.apache.avro.AvroRemoteException;
 import org.apache.avro.ipc.SaslSocketTransceiver;
 import org.apache.avro.ipc.Server;
 import org.apache.avro.ipc.Transceiver;
@@ -18,10 +19,14 @@ public abstract class Client{
     protected CharSequence name;
 
     protected int key;
+    int port;
+    ClientType type;
+    boolean is_backup = false;
 
     Client(CharSequence name, ClientType type) {
 
         this.name = name;
+        this.type= type;
         this.set_up_server();
 
         try {
@@ -34,21 +39,36 @@ public abstract class Client{
             System.exit(1);
         }
 
+    }
 
+    public void connect(){
         try {
 
-            int port = this.server.getPort();
-            CharSequence response = proxy.connect(name, "localhost", port, type);
-            System.out.println(response);
+            this.port = this.server.getPort();
+            key = proxy.connect(name, "localhost", port, type);
+
 
 
         } catch (IOException e) {
-            System.err.println(" [error] Failed to start server");
-            e.printStackTrace(System.err);
-            System.exit(1);
+            System.err.println("Server down!");
+            server_down();
+        }
+    }
+
+    public void reconnect(String ip, int port, boolean back_up){
+        is_backup = back_up;
+        try {
+            client.close();
+        } catch (IOException e) {
+
         }
 
-
+        try {
+            client = new SaslSocketTransceiver(new InetSocketAddress(port));
+            proxy = SpecificRequestor.getClient(ServerProto.Callback.class, client);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     abstract void set_up_server();
@@ -58,6 +78,30 @@ public abstract class Client{
 
         return null;
     }
+
+    protected void server_down(){
+        try {
+            client.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    protected  boolean ping(){
+        try{
+            proxy.getUsers();
+            return true;
+        } catch (AvroRemoteException e) {
+
+        }
+
+        return false;
+    }
+
+    protected boolean is_backup(){
+        return this.is_backup;
+    }
+
 
 
     void close_connection() {

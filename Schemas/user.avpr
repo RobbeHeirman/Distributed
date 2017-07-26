@@ -2,10 +2,79 @@
   "namespace": "avro.distributed.proto",
   "protocol": "UserProto",
 
+  "types": [
+    { "type": "enum",
+      "name": "ClientType",
+      "symbols" : ["USER", "FRIDGE", "LIGHT", "SENSOR"]
+    },
+    {"type": "record",
+      "name": "ClientInfo",
+      "fields":[
+        {"name": "ip", "type": "string"},
+        {"name": "port", "type": "int"},
+        {"name": "name", "type": "string"},
+        {"name": "type", "type": "ClientType"},
+        {"name": "key", "type": "int"},
+        {"name": "online", "type": "boolean"}
+      ]},
+
+    {"type": "record",
+      "name": "FridgeInfo",
+      "fields":[
+        {"name": "client_info", "type": "ClientInfo"},
+        {"name": "inventory", "type": {"type": "array", "items": "string"}}
+      ]},
+
+    {"type": "record",
+      "name": "LightInfo",
+      "fields": [
+        {"name": "client_info", "type": "ClientInfo"},
+        {"name": "state", "type": "boolean"}
+      ]},
+
+    {"type": "record",
+      "name": "SensorInfo",
+      "fields": [
+        {"name": "client_info", "type": "ClientInfo"},
+        {"name": "temperature_list", "type":{"type": "array", "items": "float"}}
+      ]}
+  ],
+
   "messages": {
     "is_alive": {
       "request": [],
       "response": "null"
+    },
+
+    "update_client": {
+      "one-way": true,
+      "request":[{"name": "client_info","type": "ClientInfo"}]
+    },
+
+    "update_user": {
+      "one-way": true,
+      "request":[{"name": "fridge_info","type": "ClientInfo"}]
+    },
+    "update_fridge": {
+      "one-way": true,
+      "request":[{"name": "fridge_info","type": "FridgeInfo"}]
+    },
+    "update_light": {
+      "one-way": true,
+      "request":[{"name": "fridge_info","type": "LightInfo"}]
+    },
+    "update_sensor": {
+      "one-way": true,
+      "request":[{"name": "fridge_info","type": "SensorInfo"}]
+    },
+
+    "send_UID":{
+      "one-way": true,
+      "request": [{"name": "UID", "type": "int"}]
+    },
+    "reconnect":{
+      "one-way": true,
+      "request": [{"name": "ip", "type": "string"},{"name": "port","type": "int"},{"name": "is_backup","type" : "boolean"}]
     }
   }
 }

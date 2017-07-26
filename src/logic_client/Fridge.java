@@ -1,8 +1,6 @@
 package logic_client;
 
-import avro.distributed.proto.ClientType;
-import avro.distributed.proto.FridgeProto;
-import avro.distributed.proto.LightProto;
+import avro.distributed.proto.*;
 import org.apache.avro.AvroRemoteException;
 import org.apache.avro.ipc.SaslSocketServer;
 import org.apache.avro.ipc.specific.SpecificResponder;
@@ -58,10 +56,49 @@ public class Fridge extends ServerClient implements FridgeProto {
         System.out.println("Getting closed.");
     }
 
+    @Override
+    public void update_client(ClientInfo client_info) {
+        this.add_client(client_info);
+    }
+
+    @Override
+    public void update_user(ClientInfo fridge_info) {
+        this.add_user(fridge_info);
+    }
+
+    @Override
+    public void update_fridge(FridgeInfo fridge_info) {
+
+        this.add_fridge(fridge_info);
+    }
+
+    @Override
+    public void update_light(LightInfo fridge_info) {
+
+        this.add_light(fridge_info);
+    }
+
+    @Override
+    public void update_sensor(SensorInfo fridge_info) {
+
+        this.add_sensor(fridge_info);
+    }
+
+    @Override
+    public void send_UID(int UID) {
+        super.send_UID(UID);
+    }
+
+    @Override
+    public void reconnect(CharSequence ip, int port, boolean back_up) {
+        super.reconnect(ip.toString(),port, back_up);
+    }
+
 
     public static void main(String args[]) {
 
         Fridge fridge = new Fridge("Fridge0");
+        fridge.connect();
         while (true) {
             try {
                 Thread.sleep(5000);

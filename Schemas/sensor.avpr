@@ -1,4 +1,11 @@
 {
   "namespace": "avro.distributed.proto",
-  "protocol": "SensorProto"
+  "protocol": "SensorProto",
+
+  "messages": {
+    "reconnect":{
+      "one-way": true,
+      "request": [{"name": "ip", "type": "string"},{"name": "port","type": "int"},{"name": "is_backup","type" : "boolean"}]
+    }
+  }
 }

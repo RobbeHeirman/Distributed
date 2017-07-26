@@ -4,9 +4,7 @@ package logic_server.Objects;
  * Created by Robbe on 7/15/2017.
  */
 
-import avro.distributed.proto.ClientType;
-import avro.distributed.proto.LightProto;
-import avro.distributed.proto.ServerProto;
+import avro.distributed.proto.*;
 import org.apache.avro.ipc.SaslSocketTransceiver;
 import org.apache.avro.ipc.Server;
 import org.apache.avro.ipc.Transceiver;
@@ -40,6 +38,24 @@ public class LightObject extends ClientObject {
         }
     }
 
+    public LightObject(LightInfo info){
+        super(info.getClientInfo().getKey(), info.getClientInfo().getIp(),info.getClientInfo().getPort(),
+                info.getClientInfo().getName().toString(),ClientType.LIGHT);
+
+        try {
+
+            client = new SaslSocketTransceiver(new InetSocketAddress( info.getClientInfo().getPort()));
+            proxy = SpecificRequestor.getClient(LightProto.Callback.class, client);
+
+        } catch (IOException e) {
+            System.err.println("Error Connecting to fridge");
+            e.printStackTrace(System.err);
+            System.exit(1);
+        }
+
+        this.on = info.getState();
+    }
+
     public void switch_light() {
 
         if (on == false) {
@@ -51,4 +67,8 @@ public class LightObject extends ClientObject {
     }
 
     public boolean get_state(){return on;}
+
+    public void reconnect(String ip, int port, boolean backup){
+        proxy.reconnect(ip, port, backup);
+    }
 }

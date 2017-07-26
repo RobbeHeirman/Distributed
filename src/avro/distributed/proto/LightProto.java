@@ -8,8 +8,9 @@ package avro.distributed.proto;
 @SuppressWarnings("all")
 @org.apache.avro.specific.AvroGenerated
 public interface LightProto {
-  public static final org.apache.avro.Protocol PROTOCOL = org.apache.avro.Protocol.parse("{\"protocol\":\"LightProto\",\"namespace\":\"avro.distributed.proto\",\"types\":[],\"messages\":{\"set_light\":{\"request\":[{\"name\":\"light_state\",\"type\":\"boolean\"}],\"response\":\"null\",\"one-way\":true}}}");
+  public static final org.apache.avro.Protocol PROTOCOL = org.apache.avro.Protocol.parse("{\"protocol\":\"LightProto\",\"namespace\":\"avro.distributed.proto\",\"types\":[],\"messages\":{\"set_light\":{\"request\":[{\"name\":\"light_state\",\"type\":\"boolean\"}],\"response\":\"null\",\"one-way\":true},\"reconnect\":{\"request\":[{\"name\":\"ip\",\"type\":\"string\"},{\"name\":\"port\",\"type\":\"int\"},{\"name\":\"is_backup\",\"type\":\"boolean\"}],\"response\":\"null\",\"one-way\":true}}}");
   void set_light(boolean light_state);
+  void reconnect(java.lang.CharSequence ip, int port, boolean is_backup);
 
   @SuppressWarnings("all")
   public interface Callback extends LightProto {

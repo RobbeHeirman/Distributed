@@ -59,6 +59,7 @@ public class Sensor extends Client implements SensorProto {
     public static void main(String args[]) {
 
         Sensor sensor = new Sensor("Sensor0");
+        sensor.connect();
         while (true) {
             try {
                 Thread.sleep(5000);
@@ -71,4 +72,8 @@ public class Sensor extends Client implements SensorProto {
     }
 
 
+    @Override
+    public void reconnect(CharSequence ip, int port, boolean back_up) {
+        super.reconnect(ip.toString(),port, back_up);
+    }
 }

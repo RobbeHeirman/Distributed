@@ -18,7 +18,7 @@ import java.util.List;
 /**
  * Created by Robbe on 7/15/2017.
  */
-public class User extends ServerClient {
+public class User extends ServerClient implements UserProto {
 
     protected Transceiver fridge_transceiver = null;
     protected FridgeProto.Callback fridge_client = null;
@@ -56,9 +56,7 @@ public class User extends ServerClient {
 
         } catch (IOException e) {
             System.err.println("Error asking for devices");
-            //startElection(); // starts the fault tolerance ring algoritm
-            //TODO: startElection will need to be one way otherwise we don't
-            //resume the program
+            this.server_down();
         }
 
         return response;
@@ -70,6 +68,7 @@ public class User extends ServerClient {
             return proxy.switchLights(light_name);
         } catch (IOException e) {
             System.out.println("Could not switch light");
+            this.server_down();
         }
         return false;
     }
@@ -101,6 +100,7 @@ public class User extends ServerClient {
             }
         } catch (IOException e) {
             System.err.println("Could not get status");
+            this.server_down();
         }
 
 
@@ -114,6 +114,7 @@ public class User extends ServerClient {
             for(CharSequence item : inv) rsp = rsp + item.toString() +"\n";
         } catch (AvroRemoteException e) {
             System.err.println("Could not get Fridge inventory");
+            this.server_down();
         }
         return rsp;
     }
@@ -125,6 +126,7 @@ public class User extends ServerClient {
             for(CharSequence item : inv) rsp = rsp + item.toString() +"\n";
         } catch (AvroRemoteException e) {
             System.err.println("Could not get Fridge inventory");
+            this.server_down();
         }
         return rsp;
     }
@@ -179,7 +181,7 @@ public class User extends ServerClient {
             ret = temperature_list.get(0);
         } catch (AvroRemoteException e) {
             System.err.println("Could not retrieve temperature");
-            e.printStackTrace();
+            this.server_down();
         }
         return ret;
     }
@@ -191,15 +193,61 @@ public class User extends ServerClient {
             ;
         } catch (AvroRemoteException e) {
             System.err.println("Could not retrieve temperature history");
-            e.printStackTrace();
+            this.server_down();
         }
         return temperature_list;
     }
+
+    @Override
+    public void update_client(ClientInfo client_info) {
+        this.add_client(client_info);
+    }
+
+    @Override
+    public void update_user(ClientInfo fridge_info) {
+        this.add_user(fridge_info);
+    }
+
+    @Override
+    public void update_fridge(FridgeInfo fridge_info) {
+
+        this.add_fridge(fridge_info);
+    }
+
+    @Override
+    public void update_light(LightInfo fridge_info) {
+
+        this.add_light(fridge_info);
+    }
+
+    @Override
+    public void update_sensor(SensorInfo fridge_info) {
+
+        this.add_sensor(fridge_info);
+    }
+
+    @Override
+    public void send_UID(int UID) {
+        super.send_UID(UID);
+    }
+
+    @Override
+    public void reconnect(CharSequence ip, int port, boolean back_up) {
+        super.reconnect(ip.toString(),port, back_up);
+    }
+
+    @Override
+    public Void is_alive(){
+        return null;
+    }
+
+
 
 
     public static void main(String[] args) {
 
         User me = new User("Robbe");
+        me.connect();
 
         try {
             ShellFactory.createConsoleShell("SmartHome/", "", new ShellClosed(me)).commandLoop();

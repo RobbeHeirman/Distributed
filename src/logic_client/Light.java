@@ -44,9 +44,15 @@ public class Light extends Client implements LightProto {
         }
     }
 
+    @Override
+    public void reconnect(CharSequence ip, int port, boolean back_up) {
+        super.reconnect(ip.toString(),port, back_up);
+    }
+
     public static void main(String[] args) {
 
         Light me = new Light("Light0");
+        me.connect();
 
         while(true){
             try{

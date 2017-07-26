@@ -8,7 +8,8 @@ package avro.distributed.proto;
 @SuppressWarnings("all")
 @org.apache.avro.specific.AvroGenerated
 public interface SensorProto {
-  public static final org.apache.avro.Protocol PROTOCOL = org.apache.avro.Protocol.parse("{\"protocol\":\"SensorProto\",\"namespace\":\"avro.distributed.proto\",\"types\":[],\"messages\":{}}");
+  public static final org.apache.avro.Protocol PROTOCOL = org.apache.avro.Protocol.parse("{\"protocol\":\"SensorProto\",\"namespace\":\"avro.distributed.proto\",\"types\":[],\"messages\":{\"reconnect\":{\"request\":[{\"name\":\"ip\",\"type\":\"string\"},{\"name\":\"port\",\"type\":\"int\"},{\"name\":\"is_backup\",\"type\":\"boolean\"}],\"response\":\"null\",\"one-way\":true}}}");
+  void reconnect(java.lang.CharSequence ip, int port, boolean is_backup);
 
   @SuppressWarnings("all")
   public interface Callback extends SensorProto {

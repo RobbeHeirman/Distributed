@@ -1,5 +1,6 @@
 package logic_server.Objects;
 
+import avro.distributed.proto.ClientInfo;
 import avro.distributed.proto.ClientType;
 
 /**
@@ -7,7 +8,7 @@ import avro.distributed.proto.ClientType;
  */
 
 
-public class ClientObject {
+public abstract class ClientObject {
 
     private int id;
     private CharSequence ip;
@@ -43,4 +44,20 @@ public class ClientObject {
     }
 
     public void log_out(){ online = false;}
+
+    public int getKey(){return this.id;}
+
+    protected ClientInfo convert_client_object(ClientObject client){
+
+        ClientInfo ret = new ClientInfo();
+        ret.setIp(client.getIp());
+        ret.setPort(client.getPort());
+        ret.setType(client.getType());
+        ret.setKey(client.getKey());
+        ret.setName(client.getName());
+        ret.setOnline(client.isOnline());
+        return ret;
+    }
+
+    public abstract void reconnect(String ip, int port, boolean backup);
 }

@@ -6,6 +6,10 @@
     "set_light": {
       "one-way" : true,
       "request" : [{"name": "light_state", "type": "boolean"}]
+    },
+    "reconnect":{
+      "one-way": true,
+      "request": [{"name": "ip", "type": "string"},{"name": "port","type": "int"},{"name": "is_backup","type" : "boolean"}]
     }
   }
 }

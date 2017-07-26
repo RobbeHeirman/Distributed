@@ -8,11 +8,18 @@ package avro.distributed.proto;
 @SuppressWarnings("all")
 @org.apache.avro.specific.AvroGenerated
 public interface FridgeProto {
-  public static final org.apache.avro.Protocol PROTOCOL = org.apache.avro.Protocol.parse("{\"protocol\":\"FridgeProto\",\"namespace\":\"avro.distributed.proto\",\"types\":[],\"messages\":{\"addItem\":{\"request\":[{\"name\":\"item\",\"type\":\"string\"}],\"response\":\"null\",\"one-way\":true},\"contains\":{\"request\":[],\"response\":{\"type\":\"array\",\"items\":\"string\"}},\"removeItem\":{\"request\":[{\"name\":\"item\",\"type\":\"string\"}],\"response\":\"null\",\"one-way\":true},\"close_fridge\":{\"request\":[],\"response\":\"null\",\"one-way\":true}}}");
+  public static final org.apache.avro.Protocol PROTOCOL = org.apache.avro.Protocol.parse("{\"protocol\":\"FridgeProto\",\"namespace\":\"avro.distributed.proto\",\"types\":[{\"type\":\"enum\",\"name\":\"ClientType\",\"symbols\":[\"USER\",\"FRIDGE\",\"LIGHT\",\"SENSOR\"]},{\"type\":\"record\",\"name\":\"ClientInfo\",\"fields\":[{\"name\":\"ip\",\"type\":\"string\"},{\"name\":\"port\",\"type\":\"int\"},{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"type\",\"type\":\"ClientType\"},{\"name\":\"key\",\"type\":\"int\"},{\"name\":\"online\",\"type\":\"boolean\"}]},{\"type\":\"record\",\"name\":\"FridgeInfo\",\"fields\":[{\"name\":\"client_info\",\"type\":\"ClientInfo\"},{\"name\":\"inventory\",\"type\":{\"type\":\"array\",\"items\":\"string\"}}]},{\"type\":\"record\",\"name\":\"LightInfo\",\"fields\":[{\"name\":\"client_info\",\"type\":\"ClientInfo\"},{\"name\":\"state\",\"type\":\"boolean\"}]},{\"type\":\"record\",\"name\":\"SensorInfo\",\"fields\":[{\"name\":\"client_info\",\"type\":\"ClientInfo\"},{\"name\":\"temperature_list\",\"type\":{\"type\":\"array\",\"items\":\"float\"}}]}],\"messages\":{\"addItem\":{\"request\":[{\"name\":\"item\",\"type\":\"string\"}],\"response\":\"null\",\"one-way\":true},\"contains\":{\"request\":[],\"response\":{\"type\":\"array\",\"items\":\"string\"}},\"removeItem\":{\"request\":[{\"name\":\"item\",\"type\":\"string\"}],\"response\":\"null\",\"one-way\":true},\"close_fridge\":{\"request\":[],\"response\":\"null\",\"one-way\":true},\"update_client\":{\"request\":[{\"name\":\"client_info\",\"type\":\"ClientInfo\"}],\"response\":\"null\",\"one-way\":true},\"update_user\":{\"request\":[{\"name\":\"fridge_info\",\"type\":\"ClientInfo\"}],\"response\":\"null\",\"one-way\":true},\"update_fridge\":{\"request\":[{\"name\":\"fridge_info\",\"type\":\"FridgeInfo\"}],\"response\":\"null\",\"one-way\":true},\"update_light\":{\"request\":[{\"name\":\"fridge_info\",\"type\":\"LightInfo\"}],\"response\":\"null\",\"one-way\":true},\"update_sensor\":{\"request\":[{\"name\":\"fridge_info\",\"type\":\"SensorInfo\"}],\"response\":\"null\",\"one-way\":true},\"send_UID\":{\"request\":[{\"name\":\"UID\",\"type\":\"int\"}],\"response\":\"null\",\"one-way\":true},\"reconnect\":{\"request\":[{\"name\":\"ip\",\"type\":\"string\"},{\"name\":\"port\",\"type\":\"int\"},{\"name\":\"is_backup\",\"type\":\"boolean\"}],\"response\":\"null\",\"one-way\":true}}}");
   void addItem(java.lang.CharSequence item);
   java.util.List<java.lang.CharSequence> contains() throws org.apache.avro.AvroRemoteException;
   void removeItem(java.lang.CharSequence item);
   void close_fridge();
+  void update_client(avro.distributed.proto.ClientInfo client_info);
+  void update_user(avro.distributed.proto.ClientInfo fridge_info);
+  void update_fridge(avro.distributed.proto.FridgeInfo fridge_info);
+  void update_light(avro.distributed.proto.LightInfo fridge_info);
+  void update_sensor(avro.distributed.proto.SensorInfo fridge_info);
+  void send_UID(int UID);
+  void reconnect(java.lang.CharSequence ip, int port, boolean is_backup);
 
   @SuppressWarnings("all")
   public interface Callback extends FridgeProto {

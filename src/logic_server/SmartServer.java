@@ -23,9 +23,11 @@ public class SmartServer implements ServerProto {
     private Map <Integer, SensorObject> sensors = new HashMap<>();
     private Server server = null;
 
-    SmartServer(int port){
+    boolean is_backup;
 
+    public SmartServer(int port, boolean is_backup ){
 
+        this.is_backup = is_backup;
 
         try {
             server = new SaslSocketServer(new SpecificResponder(ServerProto.class,
@@ -38,7 +40,7 @@ public class SmartServer implements ServerProto {
         server.start();
     }
 
-    public CharSequence connect(CharSequence username, CharSequence ip, int port, ClientType type)
+    public int connect(CharSequence username, CharSequence ip, int port, ClientType type)
             throws AvroRemoteException {
         int id_counter = 0;
         for (int key : clients.keySet()) {
@@ -47,7 +49,8 @@ public class SmartServer implements ServerProto {
             if (client.getName().equals(username)) {
                 client.log_in();
                 System.out.println("user:" + client.getName() + " Logged in");
-                return "Logged in succesfully";
+                this.client_update(client);
+                return id_counter;
             }
         }
 
@@ -56,26 +59,32 @@ public class SmartServer implements ServerProto {
                 UserObject new_client = new UserObject(id_counter,ip,port,username.toString());
                 users.put(id_counter, new_client);
                 clients.put(id_counter, new_client);
+                this.user_update(new_client);
+                this.update_new_item(new_client);
                 break;
 
             case LIGHT:
                 LightObject new_light = new LightObject(id_counter,ip,port,username.toString());
                 lights.put(id_counter, new_light);
                 clients.put(id_counter, new_light);
+                this.light_update(new_light);
                 break;
             case FRIDGE:
                 FridgeObject new_fridge = new FridgeObject(id_counter,ip,port,username.toString());
                 fridges.put(id_counter, new_fridge);
                 clients.put(id_counter, new_fridge);
+                this.fridge_update(new_fridge);
+                this.update_new_item(new_fridge);
                 break;
             case SENSOR:
                 SensorObject new_sensor = new SensorObject(id_counter,ip,port,username.toString());
                 sensors.put(id_counter, new_sensor);
                 clients.put(id_counter, new_sensor);
+                this.sensor_update(new_sensor);
                 break;
         }
 
-        return "Successfully registered";
+        return id_counter;
     }
 
     @Override
@@ -102,6 +111,7 @@ public class SmartServer implements ServerProto {
             if(lights.get(key).getName().equals(lightname.toString())){
 
                 lights.get(key).switch_light();
+                this.light_update(lights.get(key));
                 return true;
             }
         }
@@ -164,6 +174,7 @@ public class SmartServer implements ServerProto {
             FridgeObject item = fridges.get(key);
             if (item.getName().equals(fridge.toString())) {
                 item.set_inventory(inventory);
+                this.fridge_update(item);
                 break;
             }
         }
@@ -175,6 +186,7 @@ public class SmartServer implements ServerProto {
             SensorObject item = sensors.get(key);
             if (item.getName().equals(sensor_name.toString())) {
                 item.add_temperature(temperature);
+                this.sensor_update(item);
             }
         }
     }
@@ -205,16 +217,167 @@ public class SmartServer implements ServerProto {
         }
     }
 
+    private void client_update(ClientObject client){
+
+        for(int key : users.keySet()){
+            users.get(key).replicate_client(client);
+        }
+
+        for(int key: fridges.keySet()){
+            fridges.get(key).replicate_client(client);
+        }
+
+    }
+
+
+
+    private void user_update(UserObject user){
+
+        for(int key : users.keySet()){
+            users.get(key).replicate_user(user);
+        }
+
+        for(int key: fridges.keySet()){
+            fridges.get(key).replicate_user(user);
+        }
+
+    }
+
+
+
+    private void fridge_update(FridgeObject fridge){
+
+        for(int key : users.keySet()){
+            System.out.println("bla");
+            users.get(key).replicate_fridge(fridge);
+        }
+
+        for(int key: fridges.keySet()){
+            fridges.get(key).replicate_fridge(fridge);
+        }
+
+    }
+
+    private void light_update(LightObject light){
+
+        for(int key : users.keySet()){
+            users.get(key).replicate_light(light);
+        }
+
+        for(int key: fridges.keySet()){
+            fridges.get(key).replicate_light(light);
+        }
+
+    }
+
+    private void sensor_update(SensorObject sensor){
+
+        for(int key : users.keySet()){
+            users.get(key).replicate_sensor(sensor);
+        }
+
+        for(int key: fridges.keySet()){
+            fridges.get(key).replicate_sensor(sensor);
+        }
+
+    }
+
+    private void update_new_item(FridgeObject object){
+        for(int key: this.users.keySet()){
+            UserObject user = this.users.get(key);
+            object.replicate_user(user);
+        }
+
+        for(int key: this.fridges.keySet()){
+            FridgeObject user = this.fridges.get(key);
+            object.replicate_fridge(user);
+        }
+
+        for(int key: this.lights.keySet()){
+            LightObject user = this.lights.get(key);
+            object.replicate_light(user);
+        }
+
+        for(int key: this.sensors.keySet()){
+            SensorObject user = this.sensors.get(key);
+            object.replicate_sensor(user);
+        }
+    }
+
+    private void update_new_item(UserObject object){
+        for(int key: this.users.keySet()){
+            UserObject user = this.users.get(key);
+            object.replicate_user(user);
+        }
+
+        for(int key: this.fridges.keySet()){
+            FridgeObject user = this.fridges.get(key);
+            object.replicate_fridge(user);
+        }
+
+        for(int key: this.lights.keySet()){
+            LightObject user = this.lights.get(key);
+            object.replicate_light(user);
+        }
+
+        for(int key: this.sensors.keySet()){
+            SensorObject user = this.sensors.get(key);
+            object.replicate_sensor(user);
+        }
+
+    }
+
+
+    public void install_user(ClientInfo object){
+
+        UserObject user = new UserObject(object);
+        users.put(object.getKey(), user);
+        clients.put(object.getKey(),user);
+    }
+
+    public void install_fridge(FridgeInfo object){
+
+        FridgeObject fridge = new FridgeObject(object);
+        fridges.put(object.getClientInfo().getKey(), fridge);
+        clients.put(object.getClientInfo().getKey(),fridge);
+    }
+
+    public void install_light(LightInfo object){
+
+        LightObject light = new LightObject(object);
+        lights.put(object.getClientInfo().getKey(), light);
+        clients.put(object.getClientInfo().getKey(),light);
+    }
+
+    public void install_sensor(SensorInfo object){
+
+        SensorObject sensor = new SensorObject(object);
+        sensors.put(object.getClientInfo().getKey(), sensor);
+        clients.put(object.getClientInfo().getKey(),sensor);
+    }
+
+    public void broadcast_reconnection(){
+
+        int port = this.server.getPort();
+        for(int key: clients.keySet()){
+            clients.get(key).reconnect("localhost", port, this.is_backup);
+        }
+    }
 
     private void exit_system(int key){
 
         ClientObject client = clients.get(key);
         client.log_out();
+        client_update(client);
+    }
+
+    void switch_to_backup(){
+        this.is_backup = true;
     }
 
     public static void main(String[] args) {
 
-        SmartServer server = new SmartServer(6789);
+        SmartServer server = new SmartServer(6789, false);
 
         while(true){
             try {
