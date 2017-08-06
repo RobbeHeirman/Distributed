@@ -39,7 +39,9 @@
     </properties>
   </component>
   <component name="EntryPointsManager">
-    <entry_points version="2.0" />
+    <list size="1">
+      <item index="0" class="java.lang.String" itemvalue="asg.cliche.Command" />
+    </list>
   </component>
   <component name="ProjectKey">
     <option name="state" value="project://63537948-39a4-48a0-9c97-34259a0fa913" />

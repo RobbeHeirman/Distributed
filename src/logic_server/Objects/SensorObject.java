@@ -11,21 +11,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Robbe on 7/17/2017.
+ * Sensor objects. Contains the logic for all server side sensor instances.
  */
 public class SensorObject extends ClientObject {
 
-    List<Float> temperature_history = new ArrayList<>();
+    private List<Float> temperature_history = new ArrayList<>();
 
     protected Transceiver client = null;
-    protected SensorProto.Callback proxy = null;
+    private SensorProto.Callback proxy = null;
 
+    // Constructor
     public SensorObject(int id, CharSequence ip, int port, String name) {
         super(id, ip, port, name, ClientType.SENSOR);
 
         try {
 
-            client = new SaslSocketTransceiver(new InetSocketAddress(port));
+            client = new SaslSocketTransceiver(new InetSocketAddress(ip.toString(),port));
             proxy = SpecificRequestor.getClient(SensorProto.Callback.class, client);
 
         } catch (IOException e) {
@@ -35,13 +36,15 @@ public class SensorObject extends ClientObject {
         }
     }
 
+    // Constructor out of an info object
     public SensorObject(SensorInfo info){
         super(info.getClientInfo().getKey(), info.getClientInfo().getIp(),info.getClientInfo().getPort(),
                 info.getClientInfo().getName().toString(),ClientType.SENSOR);
-
+        this.online = info.getClientInfo().getOnline();
         try {
 
-            client = new SaslSocketTransceiver(new InetSocketAddress( info.getClientInfo().getPort()));
+            client = new SaslSocketTransceiver(
+                    new InetSocketAddress(info.getClientInfo().getIp().toString(), info.getClientInfo().getPort()));
             proxy = SpecificRequestor.getClient(SensorProto.Callback.class, client);
 
         } catch (IOException e) {
@@ -53,21 +56,39 @@ public class SensorObject extends ClientObject {
         this.temperature_history = info.getTemperatureList();
     }
 
-
+    /**
+     * Add's a temperature to the temperature history
+     * @param temperature temperature that needs to be added
+     */
     public void add_temperature(float temperature){
 
-        System.out.println("Temperature of sensor: " + this.getName() +" updated to " + temperature);
+        System.out.println("Sensor: Temperature of sensor: " + this.getName() +" updated to " + temperature);
         temperature_history.add(temperature);
         if(this.temperature_history.size() > 10){
             this.temperature_history.remove(0);
         }
     }
 
+    // temperature_history getter
     public List<Float> getTemperature_history(){
         return temperature_history;
     }
 
     public void reconnect(String ip, int port, boolean backup){
         proxy.reconnect(ip, port,backup);
+    }
+
+    public void log_in(int port){
+        super.log_in(port);
+        try {
+
+            client = new SaslSocketTransceiver(new InetSocketAddress(this.getIp().toString(), this.getPort()));
+            proxy = SpecificRequestor.getClient(SensorProto.Callback.class, client);
+
+        } catch (IOException e) {
+            System.err.println("Error Connecting to fridge");
+            e.printStackTrace(System.err);
+            System.exit(1);
+        }
     }
 }

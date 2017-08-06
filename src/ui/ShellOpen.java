@@ -3,9 +3,7 @@ package ui;
 import asg.cliche.Command;
 import logic_client.User;
 
-/**
- * Created by Robbe on 7/17/2017.
- */
+
 public class ShellOpen extends ClientShell  {
     ShellOpen(User user) {
         super(user);

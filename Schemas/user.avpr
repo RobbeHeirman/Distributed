@@ -41,9 +41,27 @@
   ],
 
   "messages": {
+
+    "fridgeEmpty": {
+
+      "one-way": true,
+      "request": [{"name": "fridge_name", "type": "string"}]
+
+    },
+
     "is_alive": {
       "request": [],
       "response": "null"
+    },
+
+    "user_leaves": {
+      "one-way": true,
+      "request": [{"name": "user", "type": "string"}]
+    },
+
+    "user_enters": {
+      "one-way": true,
+      "request": [{"name": "user", "type": "string"}]
     },
 
     "update_client": {
@@ -75,6 +93,14 @@
     "reconnect":{
       "one-way": true,
       "request": [{"name": "ip", "type": "string"},{"name": "port","type": "int"},{"name": "is_backup","type" : "boolean"}]
+    },
+    "old_online":{
+      "one-way": true,
+      "request": []
+    },
+    "handshake": {
+      "request": [],
+      "response": "int"
     }
   }
 }

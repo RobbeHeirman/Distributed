@@ -11,28 +11,23 @@ import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 
-
-/**
- * Created by Robbe on 7/22/2017.
- */
 public abstract class ServerClient extends Client {
 
-    private Map<Integer,ClientInfo> client_rep;
-    private Map<Integer,ClientInfo> user_rep;
-    private Map<Integer,FridgeInfo> fridge_rep;
-    private Map<Integer,LightInfo> light_rep;
-    private Map<Integer,SensorInfo> sensor_rep;
+    private Map<Integer, ClientInfo> client_rep;
+    private Map<Integer, ClientInfo> user_rep;
+    private Map<Integer, FridgeInfo> fridge_rep;
+    private Map<Integer, LightInfo> light_rep;
+    private Map<Integer, SensorInfo> sensor_rep;
 
     private boolean participant = false;
     private ClientInfo neighbour_info = null;
     private SmartServer back_up = null;
 
-    private Transceiver neighbour_transceiver = null;
     private UserProto.Callback neighbour_proxy_user = null;
     private FridgeProto.Callback neighbour_proxy_fridge = null;
 
-    ServerClient(CharSequence name, ClientType type) {
-        super(name, type);
+    ServerClient(String server_ip, int server_port,String ip, CharSequence name, ClientType type) {
+        super(server_ip, server_port,ip, name, type);
 
         user_rep = new HashMap<>();
         client_rep = new HashMap<>();
@@ -41,67 +36,68 @@ public abstract class ServerClient extends Client {
         sensor_rep = new HashMap<>();
     }
 
-    protected void add_client(ClientInfo client){
+    void add_client(ClientInfo client) {
         int key = client.getKey();
         ClientInfo cl = client_rep.get(key);
 
         cl.setOnline(client.getOnline());
     }
 
-    protected void add_user(ClientInfo user){
+    void add_user(ClientInfo user) {
 
         int key = user.getKey();
-        client_rep.put(key,user);
+        client_rep.put(key, user);
         user_rep.put(key, user);
     }
 
-    protected void add_fridge(FridgeInfo fridge){
+    void add_fridge(FridgeInfo fridge) {
 
-        ClientInfo client  = fridge.getClientInfo();
+        ClientInfo client = fridge.getClientInfo();
         int key = client.getKey();
-        client_rep.put(key,client);
+        client_rep.put(key, client);
 
-        fridge_rep.put(key,fridge);
+        fridge_rep.put(key, fridge);
     }
 
-    protected void add_light(LightInfo light){
+    void add_light(LightInfo light) {
 
-        ClientInfo client  = light.getClientInfo();
+        ClientInfo client = light.getClientInfo();
         int key = client.getKey();
-        client_rep.put(key,client);
+        client_rep.put(key, client);
 
-        light_rep.put(key,light);
+        light_rep.put(key, light);
     }
 
-    protected void add_sensor(SensorInfo sensor){
+    void add_sensor(SensorInfo sensor) {
 
-        ClientInfo client  = sensor.getClientInfo();
+        ClientInfo client = sensor.getClientInfo();
         int key = client.getKey();
-        client_rep.put(key,client);
+        client_rep.put(key, client);
 
-        sensor_rep.put(key,sensor);
+        sensor_rep.put(key, sensor);
     }
 
-    protected ClientInfo find_neighbour (){
+    private ClientInfo find_neighbour() {
 
-        ClientInfo cl ;
+        ClientInfo cl;
         int key = this.key + 1;
-        while(true){
-
-            if(key >= this.client_rep.size()){
-                key = 0 ;
+        while (true) {
+            if (key >= this.client_rep.size()) {
+                key = 0;
             }
-            if(fridge_rep.containsKey(key) || client_rep.containsKey(key)){
+            if (fridge_rep.containsKey(key) || user_rep.containsKey(key)) {
                 cl = client_rep.get(key);
-                System.out.println("check");
-                neighbour_info = cl;
-                return cl;
+                if(cl.getOnline()){
+                    neighbour_info = cl;
+                    return cl;
+                }
+
             }
             key++;
         }
     }
 
-    protected void server_down(){
+    protected void server_down() {
         System.out.println("Server down! starting the election");
         participant = true;
         neighbour_info = this.find_neighbour();
@@ -109,8 +105,8 @@ public abstract class ServerClient extends Client {
         forward_int(this.key);
     }
 
-    protected void forward_int(int num){
-        switch(neighbour_info.getType()){
+    private void forward_int(int num) {
+        switch (neighbour_info.getType()) {
 
             case USER:
                 neighbour_proxy_user.send_UID(num);
@@ -125,18 +121,20 @@ public abstract class ServerClient extends Client {
         }
     }
 
-    protected void connect_with_neighbour(ClientInfo info){
+    private void connect_with_neighbour(ClientInfo info) {
         try {
-            neighbour_transceiver = new SaslSocketTransceiver(new InetSocketAddress(info.getPort()));
+            Transceiver neighbour_transceiver = new SaslSocketTransceiver(
+                    new InetSocketAddress(info.getIp().toString(), info.getPort()));
 
-            switch(info.getType()){
+            switch (info.getType()) {
 
                 case USER:
                     neighbour_proxy_user = SpecificRequestor.getClient(UserProto.Callback.class, neighbour_transceiver);
+                    neighbour_proxy_user.handshake();
                     break;
                 case FRIDGE:
-
                     neighbour_proxy_fridge = SpecificRequestor.getClient(FridgeProto.Callback.class, neighbour_transceiver);
+                    neighbour_proxy_fridge.handshake();
                     break;
                 default:
                     System.err.println("This client is not a fridge or a USER!");
@@ -151,52 +149,79 @@ public abstract class ServerClient extends Client {
     }
 
     protected void send_UID(int UID) {
-
         boolean was_participant = participant;
-        if(participant == false){
+        if (!participant) {
             ClientInfo cl = find_neighbour();
             connect_with_neighbour(cl);
             participant = true;
         }
 
-        if(UID > key){
+        if (UID > key) {
             forward_int(UID);
 
 
-        }
-        else if(UID < key && !was_participant){
+        } else if (UID < key && !was_participant) {
             forward_int(key);
-        }
-
-        else if(UID == key){
+        } else if (UID == key) {
             System.out.println("I am the new server!");
             participant = false;
 
-            back_up = new SmartServer(0, true);
+            back_up = new SmartServer(this.ip, 0);
 
-            for (int key: user_rep.keySet()){
+            for (int key : user_rep.keySet()) {
                 back_up.install_user(user_rep.get(key));
             }
 
-            for (int key: fridge_rep.keySet()){
+            for (int key : fridge_rep.keySet()) {
                 back_up.install_fridge(fridge_rep.get(key));
             }
 
-            for (int key: light_rep.keySet()){
+            for (int key : light_rep.keySet()) {
                 back_up.install_light(light_rep.get(key));
             }
 
-            for (int key: sensor_rep.keySet()){
+            for (int key : sensor_rep.keySet()) {
                 back_up.install_sensor(sensor_rep.get(key));
             }
-        }
 
-        back_up.broadcast_reconnection();
+            back_up.broadcast_reconnection(true);
+            back_up.set_client_server(this.key);
+
+        }
 
     }
 
-    public void reconnect(String ip, int port, boolean back_up){
+    public void reconnect(String ip, int port, boolean back_up) {
         participant = false;
         super.reconnect(ip, port, back_up);
+    }
+
+    public void old_online() {
+        try {
+            client = new SaslSocketTransceiver(new InetSocketAddress(server_ip,server_port));
+            proxy = SpecificRequestor.getClient(ServerProto.Callback.class, client);
+
+        } catch (IOException ignored) {
+        }
+
+        for (int key : user_rep.keySet()) {
+            proxy.install_user(user_rep.get(key));
+        }
+
+        for (int key : fridge_rep.keySet()) {
+            proxy.install_fridge(fridge_rep.get(key));
+        }
+
+        for (int key : light_rep.keySet()) {
+            proxy.install_light(light_rep.get(key));
+        }
+
+        for (int key : sensor_rep.keySet()) {
+            proxy.install_sensor(sensor_rep.get(key));
+        }
+
+        proxy.broadcast_reconnection(false);
+        back_up.close();
+
     }
 }

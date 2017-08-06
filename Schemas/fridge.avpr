@@ -91,6 +91,14 @@
     "reconnect":{
       "one-way": true,
       "request": [{"name": "ip", "type": "string"},{"name": "port","type": "int"},{"name": "is_backup","type" : "boolean"}]
+    },
+    "old_online":{
+      "one-way": true,
+      "request": []
+    },
+    "handshake": {
+      "request": [],
+      "response": "int"
     }
 
   }

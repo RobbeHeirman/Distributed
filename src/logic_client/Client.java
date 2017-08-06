@@ -11,26 +11,45 @@ import org.apache.avro.ipc.specific.SpecificRequestor;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-public abstract class Client{
+/**
+ * The abstract class of all client side logic classes.
+ * al general logic is written here.
+ */
+public abstract class Client {
 
+    protected String ip;
     protected Transceiver client = null;
-    protected ServerProto.Callback proxy = null;
+    ServerProto.Callback proxy = null;
+
+    protected String server_ip;
+    protected int server_port;
+
+    private ServerProto.Callback old_proxy = null;
+
     protected Server server;
     protected CharSequence name;
 
     protected int key;
-    int port;
-    ClientType type;
-    boolean is_backup = false;
+    private ClientType type;
+    private boolean is_backup = false;
 
-    Client(CharSequence name, ClientType type) {
+    /**
+     * Constructor
+     *
+     * @param name name of the client
+     * @param type of the client.
+     */
+    Client(String ip_server,int port_server,String ip_client, CharSequence name, ClientType type) {
 
+        this.server_ip = ip_server;
+        this.server_port = port_server;
+        this.ip = ip_client;
         this.name = name;
-        this.type= type;
+        this.type = type;
         this.set_up_server();
 
         try {
-            client = new SaslSocketTransceiver(new InetSocketAddress(6789));
+            client = new SaslSocketTransceiver(new InetSocketAddress(ip_server,port_server));
             proxy = SpecificRequestor.getClient(ServerProto.Callback.class, client);
 
         } catch (IOException e) {
@@ -41,12 +60,39 @@ public abstract class Client{
 
     }
 
-    public void connect(){
+
+    public void reconnect(String ip, int port, boolean back_up) {
+        is_backup = back_up;
+
+        try {
+            old_proxy = proxy;
+            SaslSocketTransceiver cl = new SaslSocketTransceiver(new InetSocketAddress(ip,port));
+            proxy = SpecificRequestor.getClient(ServerProto.Callback.class, cl);
+        } catch (IOException ignored) {
+        }
+    }
+
+    abstract void set_up_server();
+
+
+    public Void is_alive() {
+
+        return null;
+    }
+
+    protected void server_down() {
+        try {
+            client.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void connect() {
         try {
 
-            this.port = this.server.getPort();
-            key = proxy.connect(name, "localhost", port, type);
-
+            int port = this.server.getPort();
+            key = proxy.connect(name, ip, port, type);
 
 
         } catch (IOException e) {
@@ -55,54 +101,35 @@ public abstract class Client{
         }
     }
 
-    public void reconnect(String ip, int port, boolean back_up){
-        is_backup = back_up;
-        try {
-            client.close();
-        } catch (IOException e) {
+    boolean ping() {
 
+        if (is_backup) {
+            try {
+                client = new SaslSocketTransceiver(new InetSocketAddress(this.server_ip,this.server_port));
+                old_proxy = SpecificRequestor.getClient(ServerProto.Callback.class, client);
+                old_proxy.getUsers();
+                System.out.println("Succesful ping");
+                return true;
+            } catch (AvroRemoteException e) {
+                System.out.println("Failed ping");
+            } catch (IOException ignored) {
+
+            }
         }
-
-        try {
-            client = new SaslSocketTransceiver(new InetSocketAddress(port));
-            proxy = SpecificRequestor.getClient(ServerProto.Callback.class, client);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    abstract void set_up_server();
-
-
-    public Void is_alive(){
-
-        return null;
-    }
-
-    protected void server_down(){
-        try {
-            client.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    protected  boolean ping(){
-        try{
-            proxy.getUsers();
-            return true;
-        } catch (AvroRemoteException e) {
-
-        }
-
         return false;
     }
 
-    protected boolean is_backup(){
+    protected boolean is_backup() {
         return this.is_backup;
     }
 
 
+    void server_back_up() {
+        proxy.old_up();
+        is_backup = false;
+
+
+    }
 
     void close_connection() {
         try {

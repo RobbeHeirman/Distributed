@@ -3,15 +3,11 @@ package ui;
 import asg.cliche.Command;
 import asg.cliche.ShellFactory;
 import avro.distributed.proto.ClientDetails;
-import logic_client.Client;
 import logic_client.User;
-
 import java.io.IOException;
 import java.util.List;
 
-/**
- * Created by Robbe on 7/14/2017.
- */
+
 public class ShellClosed extends ClientShell {
 
     public ShellClosed(User user){
@@ -42,7 +38,7 @@ public class ShellClosed extends ClientShell {
                     type = "Sensor";
                     break;
             }
-            CharSequence online = "";
+            CharSequence online;
             if(item.getStatus()){
                 online = "Online";
             }
@@ -65,11 +61,11 @@ public class ShellClosed extends ClientShell {
     public CharSequence switch_light(CharSequence light){
 
         if (user.switch_light(light)){
-            return "Light: " + light.toString() + " switched!";
+            return "Device: " + light.toString() + " switched!";
         }
 
         else{
-            return "Did not switch light " + light + ". Does it exist?";
+            return "Did not switch light " + light + ". Does it exist/is it online?";
         }
     }
 
@@ -96,25 +92,21 @@ public class ShellClosed extends ClientShell {
     }
 
     @Command
-    public CharSequence get_current_temprature(CharSequence sensor){
+    public CharSequence get_current_temprature(){
 
-        float temperature = user.current_temperature(sensor);
-
-        if(temperature ==(float) -9999){
-            return "Sensor: " + sensor +" doesn't exist.";
-        }
-        return "The current temperature is: " + temperature;
+        float temperature = user.current_temperature();
+        return "Device: The current temperature is: " + temperature;
     }
 
     @Command
-    public CharSequence get_temperature_history(CharSequence sensor){
+    public CharSequence get_temperature_history(){
 
         String ret = "<Old>\n";
 
-        List<Float> temperature_list = user.get_temperature_history(sensor);
+        List<Float> temperature_list = user.get_temperature_history();
         int count = 1;
         for(float temperature: temperature_list){
-            ret = ret + count +": " + temperature + "\n";
+            ret = String.format("%s%d: %s\n", ret, count, temperature);
             count++;
         }
         ret = ret + "<new>";

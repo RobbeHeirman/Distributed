@@ -1,13 +1,19 @@
+/*
+  Description: Contains the ClientObject class.
+  @Author: Robbe Heirman
+  @Version: 1.1
+ */
+
 package logic_server.Objects;
 
 import avro.distributed.proto.ClientInfo;
 import avro.distributed.proto.ClientType;
 
+
 /**
- * Created by Robbe on 7/13/2017.
+ * The ClientObject class is the abstract class for all Server side objects. These are the models in the system.
+ * Instances of those classes will contain all information about the objects in the system.
  */
-
-
 public abstract class ClientObject {
 
     private int id;
@@ -15,9 +21,17 @@ public abstract class ClientObject {
     private int port;
     private String name;
     private ClientType type;
-    private boolean online;
+    protected boolean online;
 
-    public ClientObject(int id, CharSequence ip, int port, String name, ClientType type){
+    /**
+     * The constructor (package private)
+     * @param id id of the class. Also referred as key
+     * @param ip  ip address of the device where the client of the object is located.
+     * @param port Port of the address of the device where the client is located.
+     * @param name Unique name of the object.
+     * @param type A clientType enumerator. One for each kind of object.
+     */
+    ClientObject(int id, CharSequence ip, int port, String name, ClientType type) {
 
         this.id = id;
         this.ip = ip;
@@ -27,27 +41,55 @@ public abstract class ClientObject {
         online = true;
     }
 
-    public String getName(){
+    // @return returns the name of the object as a string.
+    public String getName() {
         return name;
     }
 
-    public CharSequence getIp() {return ip;}
 
-    public int getPort() {return port;}
-
-    public boolean isOnline(){return online;}
-
-    public ClientType getType(){return this.type;}
-
-    public void log_in(){
-        online = true;
+    // @return returns the ip of the ip of the object.
+    public CharSequence getIp() {
+        return ip;
     }
 
-    public void log_out(){ online = false;}
+    // @return returns the port as an iteger of the client side device.
+    public int getPort() {
+        return port;
+    }
 
-    public int getKey(){return this.id;}
+    // @return if the device is online
+    public boolean isOnline() {
+        return online;
+    }
 
-    protected ClientInfo convert_client_object(ClientObject client){
+    // @return the type of the device
+    public ClientType getType() {
+        return this.type;
+    }
+
+    // Returns the key
+    public int getKey() {
+        return this.id;
+    }
+
+    /**
+     * Log in a device. This device also needs to re send his port. All devices their ports binded dynamicly.
+     * so this needs to switch.
+     *
+     * @param port the new port of the device.
+     */
+    public void log_in(int port) {
+        online = true;
+        this.port = port;
+    }
+
+    // Logs the device out.
+    public void log_out() {
+        System.out.println("Server: " + this.getName() + " went offline.");
+        online = false;
+    }
+
+    ClientInfo convert_client_object(ClientObject client) {
 
         ClientInfo ret = new ClientInfo();
         ret.setIp(client.getIp());

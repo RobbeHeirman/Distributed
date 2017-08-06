@@ -8,30 +8,29 @@ import org.apache.avro.ipc.SaslSocketTransceiver;
 import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.ipc.specific.SpecificResponder;
+import reader.readfile;
 import ui.ShellClosed;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-/**
- * Created by Robbe on 7/15/2017.
- */
 public class User extends ServerClient implements UserProto {
 
-    protected Transceiver fridge_transceiver = null;
-    protected FridgeProto.Callback fridge_client = null;
+    private Transceiver fridge_transceiver = null;
+    private FridgeProto.Callback fridge_client = null;
 
-    User(CharSequence name) {
-        super(name, ClientType.USER);
+    private User(String s_ip, int s_port, String ip, CharSequence name) {
+        super(s_ip, s_port, ip, name, ClientType.USER);
     }
 
     @Override
     void set_up_server() {
         try {
             server = new SaslSocketServer(new SpecificResponder(UserProto.class,
-                    this), new InetSocketAddress(0));
+                    this), new InetSocketAddress(ip,0));
         } catch (IOException e) {
             System.err.println(" [error] Failed to start server");
             e.printStackTrace(System.err);
@@ -84,7 +83,7 @@ public class User extends ServerClient implements UserProto {
 
             for (light_status light : lstat) {
 
-                response = response + light.getLightName().toString() + "\t";
+                response = String.format("%s%s\t", response, light.getLightName().toString());
                 if (light.getState()) {
                     response = response + "Aan\t";
                 } else {
@@ -107,28 +106,32 @@ public class User extends ServerClient implements UserProto {
         return response;
     }
 
+    @Override
+    public void fridgeEmpty(CharSequence fridge_name){
+        System.out.println("Device: "+ fridge_name + " is empty.");
+    }
+
     public CharSequence getFridgeInventory(CharSequence fridge){
-        CharSequence rsp = "";
+        StringBuilder rsp = new StringBuilder();
         try {
             List<CharSequence> inv = proxy.getFridgeInventory(fridge);
-            for(CharSequence item : inv) rsp = rsp + item.toString() +"\n";
+            for(CharSequence item : inv) rsp.append(item.toString()).append("\n");
         } catch (AvroRemoteException e) {
             System.err.println("Could not get Fridge inventory");
             this.server_down();
         }
-        return rsp;
+        return rsp.toString();
     }
 
     public CharSequence getFridgeInventoryOpen(){
-        CharSequence rsp = "";
+        StringBuilder rsp = new StringBuilder();
         try {
             List<CharSequence> inv = fridge_client.contains();
-            for(CharSequence item : inv) rsp = rsp + item.toString() +"\n";
+            for(CharSequence item : inv) rsp.append(item.toString()).append("\n");
         } catch (AvroRemoteException e) {
-            System.err.println("Could not get Fridge inventory");
-            this.server_down();
+            System.out.println("Device: The fridge went offline please close it [exit] to continue ");
         }
-        return rsp;
+        return rsp.toString();
     }
 
 
@@ -156,16 +159,30 @@ public class User extends ServerClient implements UserProto {
 
     public void add_item(CharSequence item){
 
-        fridge_client.addItem(item);
+        try{
+            fridge_client.addItem(item);
+        }catch (Exception e){
+           System.out.println("Device: The fridge went offline please close it [exit] to continue ");
+        }
+
     }
 
     public void remove_item(CharSequence item){
-        fridge_client.removeItem(item);
+        try{
+            fridge_client.removeItem(item);
+        }catch (Exception e){
+            System.out.println("Device: The fridge went offline please close it [exit] to continue ");
+        }
+
     }
 
     public void close_fridge(){
+        try{
+            fridge_client.close_fridge();
+        }catch (Exception ignored){
 
-        fridge_client.close_fridge();
+        }
+
         try {
             fridge_transceiver.close();
         } catch (IOException e) {
@@ -174,10 +191,10 @@ public class User extends ServerClient implements UserProto {
         }
     }
 
-    public float current_temperature(CharSequence sensor_name){
+    public float current_temperature(){
             float ret = -9999;
         try {
-            List<Float> temperature_list = proxy.getTemperatureList(sensor_name);
+            List<Float> temperature_list = proxy.getTemperatureList();
             ret = temperature_list.get(0);
         } catch (AvroRemoteException e) {
             System.err.println("Could not retrieve temperature");
@@ -186,11 +203,11 @@ public class User extends ServerClient implements UserProto {
         return ret;
     }
 
-    public List<Float> get_temperature_history(CharSequence sensor_name){
+    public List<Float> get_temperature_history(){
         List<Float> temperature_list = null;
         try {
-            temperature_list = proxy.getTemperatureList(sensor_name);
-            ;
+            temperature_list = proxy.getTemperatureList();
+
         } catch (AvroRemoteException e) {
             System.err.println("Could not retrieve temperature history");
             this.server_down();
@@ -241,23 +258,52 @@ public class User extends ServerClient implements UserProto {
         return null;
     }
 
+    @Override
+    public void user_leaves(CharSequence name) {
+        System.out.println(name + " Left the building.");
+    }
+
+    @Override
+    public void user_enters(CharSequence user) {
+        System.out.println(user + " enters the building.");
+    }
+
+    @Override
+    public void old_online(){
+        super.old_online();
+    }
+
+    @Override
+    public int handshake() throws AvroRemoteException {
+        return 0;
+    }
 
 
+    public static void main(java.lang.String args[]) {
 
-    public static void main(String[] args) {
+        readfile r = new readfile();
+        Map<String,String> inf = r.readFile("info.txt");
 
-        User me = new User("Robbe");
+        String s_ip = inf.get("ip_server");
+        int s_port = Integer.parseInt(inf.get("port_server"));
+        String c_ip = inf.get("ip_client");
+
+        String name = "default_user";
+        for(String s: args){
+            name = s;
+        }
+
+        User me = new User(s_ip,s_port,c_ip, name);
         me.connect();
 
         try {
-            ShellFactory.createConsoleShell("SmartHome/", "", new ShellClosed(me)).commandLoop();
+            System.out.println("Welcome to the smartnetwork!");
+            ShellFactory.createConsoleShell("SmartHome/" + name, "", new ShellClosed(me)).commandLoop();
             me.close_connection();
         } catch (IOException e) {
             System.err.println("Problems with the console Shell");
         }
 
     }
-
-
 }
 

@@ -92,6 +92,11 @@
       "response": {"type": "array", "items": "string"}
     },
 
+    "fridgeEmpty": {
+      "one-way": true,
+      "request": [{"name": "fridge_name", "type": "string"}]
+    },
+
     "openFridge":{
       "request": [{"name": "fridgename", "type": "string"}],
       "response": "FridgeDetails"
@@ -106,18 +111,39 @@
     },
 
     "temperatureUpdate":{
-      "one-way": true,
-      "request": [{"name": "sensor_name", "type": "string"},{"name": "temperature", "type": "float"}]
+      "request": [{"name": "sensor_name", "type": "string"},{"name": "temperature", "type": "float"}],
+      "response": "float"
     },
 
     "getTemperatureList":{
 
-      "request": [{"name": "sensor_name", "type": "string"}],
+      "request": [],
       "response": {"type": "array", "items": "float"}
     },
     "install_user":{
       "one-way": true,
       "request": [{"name": "user", "type": "ClientInfo"}]
+    },
+
+    "install_fridge":{
+      "one-way": true,
+      "request": [{"name": "fridge", "type": "FridgeInfo"}]
+    },
+    "install_light":{
+      "one-way": true,
+      "request": [{"name": "user", "type": "LightInfo"}]
+    },
+    "install_sensor":{
+      "one-way": true,
+      "request": [{"name": "sensor", "type": "SensorInfo"}]
+    },
+    "old_up":{
+      "one-way":true,
+      "request":[]
+    },
+    "broadcast_reconnection":{
+      "one-way": true,
+      "request": [{"name":"is_backup", "type": "boolean"}]
     }
   }
 }
