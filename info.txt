@@ -1,0 +1,3 @@
+ip_server localhost
+port_server 6789
+ip_client localhost

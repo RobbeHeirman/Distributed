@@ -21,8 +21,8 @@ public abstract class Client {
     protected Transceiver client = null;
     ServerProto.Callback proxy = null;
 
-    protected String server_ip;
-    protected int server_port;
+    String server_ip;
+    int server_port;
 
     private ServerProto.Callback old_proxy = null;
 

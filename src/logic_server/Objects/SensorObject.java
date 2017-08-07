@@ -62,7 +62,7 @@ public class SensorObject extends ClientObject {
      */
     public void add_temperature(float temperature){
 
-        System.out.println("Sensor: Temperature of sensor: " + this.getName() +" updated to " + temperature);
+        System.out.println("Server: Temperature of sensor: " + this.getName() +" updated to " + temperature);
         temperature_history.add(temperature);
         if(this.temperature_history.size() > 10){
             this.temperature_history.remove(0);

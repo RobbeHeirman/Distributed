@@ -11,7 +11,10 @@ import org.apache.avro.ipc.specific.SpecificResponder;
 import reader.readfile;
 import ui.ShellClosed;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -280,6 +283,14 @@ public class User extends ServerClient implements UserProto {
 
 
     public static void main(java.lang.String args[]) {
+
+        PrintStream out = null;
+        try {
+            out = new PrintStream(new FileOutputStream("test2_output.txt"));
+        } catch (FileNotFoundException ignored) {
+
+        }
+        System.setErr(out);
 
         readfile r = new readfile();
         Map<String,String> inf = r.readFile("info.txt");

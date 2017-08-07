@@ -5,9 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
-/**
- * Created by Robbe on 8/6/2017.
- */
+
 public class readfile {
 
     private Scanner x;
@@ -22,7 +20,7 @@ public class readfile {
         }
     }
 
-    public Map<String,String> readFile(String file){
+    public Map<String,String> readFile(@SuppressWarnings("SameParameterValue") String file){
         System.out.println("Reading " + file + "...");
         this.openFile(file);
         Map<String, String> ret = new HashMap<>();

@@ -15,7 +15,10 @@ import org.apache.avro.ipc.Server;
 import org.apache.avro.ipc.specific.SpecificResponder;
 import reader.readfile;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -203,6 +206,7 @@ public class SmartServer implements ServerProto {
 
                 if(lights.get(key).switch_light()){
                     this.light_update(lights.get(key));
+                    System.out.println("Server: Light " + lightname + " is switched.");
                     return true;
                 }
             }
@@ -324,7 +328,7 @@ public class SmartServer implements ServerProto {
      */
     @Override
     public List<Float> getTemperatureList() {
-
+        System.out.println("Server: Temperature list requested...");
         int k_l = 0;
         for(int key: clients.keySet()){
             if(clients.get(key).getType() == ClientType.SENSOR){
@@ -332,11 +336,16 @@ public class SmartServer implements ServerProto {
                 break;
             }
         }
+        List<Float> ret = new ArrayList<>();
+        try{
+            ret = sensors.get(k_l).getTemperature_history();
+        }catch (Exception e){
+            ret.add((float) 0);
+        }
 
-        List<Float> ret = sensors.get(k_l).getTemperature_history();
         for (int i = 0; i < ret.size(); i++) {
             for (int key : sensors.keySet()) {
-                if (sensors.get(0) != sensors.get(key)) {
+                if (sensors.get(k_l) != sensors.get(key)) {
                     float add = 0;
                     if (sensors.get(key).getTemperature_history().size() > i) {
                         add = sensors.get(key).getTemperature_history().get(i);
@@ -615,13 +624,13 @@ public class SmartServer implements ServerProto {
         Map<String,String> inf = r.readFile("info.txt");
 
 
-      /*  PrintStream out = null;
+        PrintStream out = null;
         try {
             out = new PrintStream(new FileOutputStream("test2_output.txt"));
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException ignored) {
 
         }
-        System.setErr(out); */
+        System.setErr(out);
         SmartServer server = new SmartServer(inf.get("ip_server"),Integer.parseInt(inf.get("port_server")));
 
         //noinspection InfiniteLoopStatement
